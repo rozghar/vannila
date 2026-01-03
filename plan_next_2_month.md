@@ -200,3 +200,15 @@ const { data, error } = await supabase.auth.signUp(
 - [ ] Create starter Next.js pages for Register/Login/Profile (code)
 - [ ] Produce a two‑page Figma wireframe or PNG mockups
 - [ ] Draft a short Privacy Policy & Terms template tuned to this platform
+
+
+
+
+
+### steps to do git push
+git status # shows all modified files
+git diff or git diff <filename>    #shows what has been changed in the files
+git add . # stages all the modified files for commit
+or git add <filename>  # stages specific file for commit
+git commit -m "your message"
+git push origin main
