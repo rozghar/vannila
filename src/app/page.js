@@ -7,10 +7,10 @@ export default function Home() {
   const { user } = useAuth()
 
   return (
-    <main style={{ textAlign: 'center', padding: '50px 20px' }}>
-      <h1>My Regional Platform</h1>
+    <main style={{ textAlign: 'center', padding: '50px 20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+      <h1 style={{ color: '#333', fontSize: '2.5rem', marginBottom: '20px' }}>Welcome to My Regional Platform</h1>
       <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
-        Connect Teachers, Drivers, and Students in West Bengal & Assam
+        Empowering Teachers, Drivers, and Students in India
       </p>
 
       {!user ? (
@@ -46,22 +46,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div>
-          <p>Welcome, {user.email}!</p>
-          <Link href="/dashboard">
-            <button style={{
-              padding: '12px 24px',
-              fontSize: '16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}>
-              Go to Dashboard
-            </button>
-          </Link>
-        </div>
+        <p>Welcome back, {user.email}!</p>
       )}
     </main>
   )

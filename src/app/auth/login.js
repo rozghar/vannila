@@ -22,20 +22,21 @@ export default function Login() {
         password,
       })
 
-      if (signInError) throw signInError
-
-      // Redirect to dashboard on successful login
-      router.push('/dashboard')
+      if (signInError) {
+        setError(signInError.message)
+      } else {
+        router.push('/dashboard')
+      }
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px' }}>
-      <h1>Login</h1>
+    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+      <h1 style={{ color: '#333' }}>Login</h1>
 
       {error && (
         <div style={{ color: 'red', marginBottom: '10px', padding: '10px', border: '1px solid red', borderRadius: '4px' }}>

@@ -8,18 +8,15 @@ export default function Register() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // Form state
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student', // Default role
-    state: 'westbengal', // Default state
+    role: 'student',
+    state: 'westbengal',
   })
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -28,18 +25,10 @@ export default function Register() {
     }))
   }
 
-  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-
-    // Simple validation
-    if (!formData.fullName || !formData.email || !formData.password) {
-      setError('Please fill all fields')
-      setLoading(false)
-      return
-    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -47,15 +36,8 @@ export default function Register() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      setLoading(false)
-      return
-    }
-
     try {
-      // Sign up with Supabase
-      const { data, error: signupError } = await supabase.auth.signUp(
+      const { error: signUpError } = await supabase.auth.signUp(
         {
           email: formData.email,
           password: formData.password,
@@ -69,20 +51,21 @@ export default function Register() {
         }
       )
 
-      if (signupError) throw signupError
-
-      alert('Signup successful! Please check your email to verify.')
-      router.push('/auth/login')
+      if (signUpError) {
+        setError(signUpError.message)
+      } else {
+        router.push('/auth/login')
+      }
     } catch (err) {
-      setError(err.message || 'Signup failed')
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px' }}>
-      <h1>Register</h1>
+    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+      <h1 style={{ color: '#333' }}>Register</h1>
 
       {error && (
         <div style={{ color: 'red', marginBottom: '10px', padding: '10px', border: '1px solid red', borderRadius: '4px' }}>
@@ -91,7 +74,6 @@ export default function Register() {
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Full Name */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="fullName">Full Name</label>
           <input
@@ -105,7 +87,6 @@ export default function Register() {
           />
         </div>
 
-        {/* Email */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="email">Email</label>
           <input
@@ -119,7 +100,6 @@ export default function Register() {
           />
         </div>
 
-        {/* Password */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="password">Password (min 6 chars)</label>
           <input
@@ -133,7 +113,6 @@ export default function Register() {
           />
         </div>
 
-        {/* Confirm Password */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="confirmPassword">Confirm Password</label>
           <input
@@ -147,7 +126,6 @@ export default function Register() {
           />
         </div>
 
-        {/* Role Selection */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="role">I am a:</label>
           <select
@@ -163,7 +141,6 @@ export default function Register() {
           </select>
         </div>
 
-        {/* State Selection */}
         <div style={{ marginBottom: '15px' }}>
           <label htmlFor="state">State:</label>
           <select
@@ -178,7 +155,6 @@ export default function Register() {
           </select>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
