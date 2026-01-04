@@ -85,7 +85,7 @@ export default function Register() {
     }
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp(
+      const { error: signUpError, data } = await supabase.auth.signUp(
         {
           email: formData.email,
           password: formData.password,
@@ -105,7 +105,23 @@ export default function Register() {
 
       if (signUpError) {
         setError(signUpError.message)
-      } else {
+      } else if (data?.user) {
+        // Save profile to database
+        try {
+          await supabase.from('profiles').insert({
+            id: data.user.id,
+            full_name: formData.fullName,
+            phone_number: formData.phoneNumber,
+            date_of_birth: formData.dateOfBirth,
+            state: formData.state,
+            district: formData.district,
+            village: formData.village,
+            role: formData.role,
+          })
+        } catch (profileErr) {
+          console.warn('Profile save warning:', profileErr)
+          // Continue even if profile save fails
+        }
         router.push('/auth/login')
       }
     } catch (err) {

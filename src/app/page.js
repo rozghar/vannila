@@ -60,6 +60,7 @@ export default function Home() {
           <div className="auth-links">
             <Link href="/auth/register">Register</Link>
             <Link href="/auth/login">Login</Link>
+            <Link href="/search" style={{ marginLeft: '20px' }}>Browse Listings</Link>
           </div>
         </div>
       </header>
