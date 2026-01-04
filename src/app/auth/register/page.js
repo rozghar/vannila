@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { states, getDistricts, getVillages } from '@/data/statesDistricts'
 
 export default function Register() {
   const router = useRouter()
@@ -15,7 +16,14 @@ export default function Register() {
     confirmPassword: '',
     role: 'student',
     state: 'westbengal',
+    district: '',
+    village: '',
+    dateOfBirth: '',
+    phoneNumber: '',
   })
+
+  const districts = useMemo(() => getDistricts(formData.state), [formData.state])
+  const villages = useMemo(() => getVillages(formData.state, formData.district), [formData.state, formData.district])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -23,11 +31,51 @@ export default function Register() {
       ...prev,
       [name]: value,
     }))
+    // Reset district and village when state changes
+    if (name === 'state') {
+      setFormData(prev => ({
+        ...prev,
+        district: '',
+        village: '',
+      }))
+    }
+    // Reset village when district changes
+    if (name === 'district') {
+      setFormData(prev => ({
+        ...prev,
+        village: '',
+      }))
+    }
+  }
+
+  const validatePhone = (phone) => {
+    return /^[6-9]\d{9}$/.test(phone)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!formData.phoneNumber) {
+      setError('Phone number is required')
+      return
+    }
+
+    if (!validatePhone(formData.phoneNumber)) {
+      setError('Phone number must be a valid 10-digit Indian number (starts with 6-9)')
+      return
+    }
+
+    if (!formData.dateOfBirth) {
+      setError('Date of birth is required')
+      return
+    }
+
+    if (!formData.district || !formData.village) {
+      setError('Please select state, district, and village/town')
+      return
+    }
+
     setLoading(true)
 
     if (formData.password !== formData.confirmPassword) {
@@ -45,8 +93,12 @@ export default function Register() {
         {
           data: {
             full_name: formData.fullName,
-            role: formData.role,
+            phone_number: formData.phoneNumber,
+            date_of_birth: formData.dateOfBirth,
             state: formData.state,
+            district: formData.district,
+            village: formData.village,
+            role: formData.role,
           },
         }
       )
@@ -85,6 +137,82 @@ export default function Register() {
             style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
             required
           />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="dateOfBirth">Date of Birth</label>
+          <input
+            type="date"
+            id="dateOfBirth"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="phoneNumber">Phone Number</label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            placeholder="10-digit Indian number (e.g., 9876543210)"
+            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="state">State</label>
+          <select
+            id="state"
+            name="state"
+            value={formData.state}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+          >
+            {states.map(s => (
+              <option key={s.code} value={s.code}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="district">District</label>
+          <select
+            id="district"
+            name="district"
+            value={formData.district}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            required
+          >
+            <option value="">Select District</option>
+            {districts.map(d => (
+              <option key={d.code} value={d.code}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="village">Village/Town</label>
+          <select
+            id="village"
+            name="village"
+            value={formData.village}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            required
+          >
+            <option value="">Select Village/Town</option>
+            {villages.map(v => (
+              <option key={v} value={v}>{v}</option>
+            ))}
+          </select>
         </div>
 
         <div style={{ marginBottom: '15px' }}>
@@ -138,20 +266,7 @@ export default function Register() {
             <option value="student">Student</option>
             <option value="teacher">Teacher / Tutor</option>
             <option value="driver">Driver</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="state">State:</label>
-          <select
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-          >
-            <option value="westbengal">West Bengal</option>
-            <option value="assam">Assam</option>
+            <option value="locals">Local Service Provider</option>
           </select>
         </div>
 
