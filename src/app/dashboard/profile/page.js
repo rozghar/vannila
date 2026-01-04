@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext'
 import Link from 'next/link'
 import { StudentProfile, TeacherProfile, DriverProfile, LocalsProfile } from '@/components/ProfileCards'
 import ProfileImageUpload from '@/components/ProfileImageUpload'
-import { RatingDisplay, RatingForm } from '@/components/RatingSystem'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase } from '@/lib/supabaseClient'
 import { fetchUserProfile, updateUserProfile, createListing } from '@/lib/database'
@@ -281,9 +280,6 @@ export default function ProfilePage() {
 
             <h2 style={{ marginTop: '30px' }}>Role-Specific Details</h2>
             {renderRoleProfile()}
-
-            <RatingDisplay listingId={user?.id} />
-            <RatingForm listingId={user?.id} />
           </div>
         )}
 
