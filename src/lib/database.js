@@ -10,6 +10,7 @@ CREATE TABLE profiles (
   state TEXT,
   district TEXT,
   village TEXT,
+  pin_code TEXT,
   role TEXT DEFAULT 'student',
   avatar_url TEXT,
   bio TEXT,
@@ -52,7 +53,7 @@ CREATE INDEX idx_ratings_listing ON ratings(listing_id);
 `;
 
 export const initializeProfile = async (supabase, userId, profileData) => {
-  const { error } = await supabase.from('profiles').insert({
+  const { error } = await supabase.from("profiles").insert({
     id: userId,
     full_name: profileData.fullName,
     phone_number: profileData.phoneNumber,
@@ -60,6 +61,7 @@ export const initializeProfile = async (supabase, userId, profileData) => {
     state: profileData.state,
     district: profileData.district,
     village: profileData.village,
+    pin_code: profileData.pinCode,
     role: profileData.role,
   });
   return error;
@@ -67,38 +69,39 @@ export const initializeProfile = async (supabase, userId, profileData) => {
 
 export const fetchUserProfile = async (supabase, userId) => {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
     .single();
   return { data, error };
 };
 
 export const updateUserProfile = async (supabase, userId, profileData) => {
   const { error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .update(profileData)
-    .eq('id', userId);
+    .eq("id", userId);
   return error;
 };
 
 export const fetchListings = async (supabase, filters = {}) => {
-  let query = supabase.from('listings').select('*');
-  
-  if (filters.state) query = query.eq('state', filters.state);
-  if (filters.district) query = query.eq('district', filters.district);
-  if (filters.role) query = query.eq('role', filters.role);
-  if (filters.searchTerm) query = query.ilike('title', `%${filters.searchTerm}%`);
-  
+  let query = supabase.from("listings").select("*");
+
+  if (filters.state) query = query.eq("state", filters.state);
+  if (filters.district) query = query.eq("district", filters.district);
+  if (filters.role) query = query.eq("role", filters.role);
+  if (filters.searchTerm)
+    query = query.ilike("title", `%${filters.searchTerm}%`);
+
   const { data, error } = await query;
   return { data, error };
 };
 
 export const createListing = async (supabase, userId, listingData) => {
-  const { error } = await supabase.from('listings').insert({
+  const { error } = await supabase.from("listings").insert({
     user_id: userId,
     title: listingData.title || listingData.fullName,
-    description: listingData.bio || '',
+    description: listingData.bio || "",
     role: listingData.role,
     state: listingData.state,
     district: listingData.district,
@@ -109,15 +112,21 @@ export const createListing = async (supabase, userId, listingData) => {
 
 export const fetchRatings = async (supabase, listingId) => {
   const { data, error } = await supabase
-    .from('ratings')
-    .select('*')
-    .eq('listing_id', listingId)
-    .order('created_at', { ascending: false });
+    .from("ratings")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false });
   return { data, error };
 };
 
-export const submitRating = async (supabase, listingId, reviewerId, rating, reviewText) => {
-  const { error } = await supabase.from('ratings').insert({
+export const submitRating = async (
+  supabase,
+  listingId,
+  reviewerId,
+  rating,
+  reviewText,
+) => {
+  const { error } = await supabase.from("ratings").insert({
     listing_id: listingId,
     reviewer_id: reviewerId,
     rating,
@@ -129,11 +138,11 @@ export const submitRating = async (supabase, listingId, reviewerId, rating, revi
 export const uploadAvatar = async (supabase, userId, file) => {
   const filename = `${userId}-${Date.now()}.jpg`;
   const { error: uploadError } = await supabase.storage
-    .from('avatars')
+    .from("avatars")
     .upload(filename, file, { upsert: false });
-  
+
   if (uploadError) return { error: uploadError };
-  
-  const { data } = supabase.storage.from('avatars').getPublicUrl(filename);
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(filename);
   return { url: data.publicUrl };
 };

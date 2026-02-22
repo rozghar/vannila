@@ -1,87 +1,133 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
-import { states, getDistricts, getVillages } from '@/data/statesDistricts'
+import { getDistricts } from "@/data/statesDistricts";
+import { fetchAddressByPinCode } from "@/lib/address";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function Register() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'student',
-    state: 'westbengal',
-    district: '',
-    village: '',
-    dateOfBirth: '',
-    phoneNumber: '',
-  })
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "student",
+    state: "westbengal",
+    district: "",
+    village: "",
+    dateOfBirth: "",
+    phoneNumber: "",
+    pinCode: "",
+  });
 
-  const districts = useMemo(() => getDistricts(formData.state), [formData.state])
-  const villages = useMemo(() => getVillages(formData.state, formData.district), [formData.state, formData.district])
+  const districts = useMemo(
+    () => getDistricts(formData.state),
+    [formData.state],
+  );
+  const [villages, setVillages] = useState([]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+    if (
+      (!/^\d*$/.test(value) && name === "pinCode") ||
+      (name === "pinCode" && value.length > 6)
+    )
+      return;
+
+    if (
+      (!/^\d*$/.test(value) && name === "phoneNumber") ||
+      (name === "phoneNumber" && value.length > 10)
+    )
+      return;
+
+    if (name === "pinCode" && value.length === 6) {
+      try {
+        const data = await fetchAddressByPinCode(value);
+        console.log("🚀 -------------------------------🚀");
+        console.log("🚀 ~ handleChange ~ data:", data);
+        console.log("🚀 -------------------------------🚀");
+        setFormData((prev) => ({
+          ...prev,
+          pinCode: value,
+          state: data?.state || "",
+          district: Object.keys(data?.listOfDistricts || {})[0] || "",
+        }));
+        setVillages(
+          data
+            ? data.listOfDistricts[
+                Object.keys(data?.listOfDistricts || {})[0] || ""
+              ] || []
+            : [],
+        );
+      } catch (err) {
+        console.error("🚀 -------------------------------🚀");
+        console.error("🚀 ~ handleChange ~ err:", err);
+        console.error("🚀 -------------------------------🚀");
+        return [];
+      }
+    }
+
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
     // Reset district and village when state changes
-    if (name === 'state') {
-      setFormData(prev => ({
+    if (name === "state") {
+      setFormData((prev) => ({
         ...prev,
-        district: '',
-        village: '',
-      }))
+        district: "",
+        village: "",
+      }));
     }
     // Reset village when district changes
-    if (name === 'district') {
-      setFormData(prev => ({
+    if (name === "district") {
+      setFormData((prev) => ({
         ...prev,
-        village: '',
-      }))
+        village: "",
+      }));
     }
-  }
+  };
 
   const validatePhone = (phone) => {
-    return /^[6-9]\d{9}$/.test(phone)
-  }
+    return /^[6-9]\d{9}$/.test(phone);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!formData.phoneNumber) {
-      setError('Phone number is required')
-      return
+      setError("Phone number is required");
+      return;
     }
 
     if (!validatePhone(formData.phoneNumber)) {
-      setError('Phone number must be a valid 10-digit Indian number (starts with 6-9)')
-      return
+      setError(
+        "Phone number must be a valid 10-digit Indian number (starts with 6-9)",
+      );
+      return;
     }
 
     if (!formData.dateOfBirth) {
-      setError('Date of birth is required')
-      return
+      setError("Date of birth is required");
+      return;
     }
 
     if (!formData.district || !formData.village) {
-      setError('Please select state, district, and village/town')
-      return
+      setError("Please select state, district, and village/town");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     try {
@@ -99,16 +145,17 @@ export default function Register() {
             district: formData.district,
             village: formData.village,
             role: formData.role,
+            pinCode: formData.pinCode,
           },
-        }
-      )
+        },
+      );
 
       if (signUpError) {
-        setError(signUpError.message)
+        setError(signUpError.message);
       } else if (data?.user) {
         // Save profile to database
         try {
-          await supabase.from('profiles').insert({
+          await supabase.from("profiles").insert({
             id: data.user.id,
             full_name: formData.fullName,
             phone_number: formData.phoneNumber,
@@ -117,32 +164,59 @@ export default function Register() {
             district: formData.district,
             village: formData.village,
             role: formData.role,
-          })
+          });
         } catch (profileErr) {
-          console.warn('Profile save warning:', profileErr)
+          console.warn("Profile save warning:", profileErr);
           // Continue even if profile save fails
         }
-        router.push('/auth/login')
+        let countdown = 5;
+        setInterval(() => {
+          setError(
+            `Please check your email for verification link before logging in. Redirecting to login in ${countdown} seconds...`,
+          );
+          countdown--;
+          if (countdown < 0) {
+            clearInterval(this);
+            router.push("/auth/login");
+          }
+        }, 1000);
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-      <h1 style={{ color: '#333' }}>Register</h1>
+    <div
+      style={{
+        maxWidth: "500px",
+        margin: "50px auto",
+        padding: "20px",
+        backgroundColor: "#fff",
+        borderRadius: "8px",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <h1 style={{ color: "#333" }}>Register</h1>
 
       {error && (
-        <div style={{ color: 'red', marginBottom: '10px', padding: '10px', border: '1px solid red', borderRadius: '4px' }}>
+        <div
+          style={{
+            color: "red",
+            marginBottom: "10px",
+            padding: "10px",
+            border: "1px solid red",
+            borderRadius: "4px",
+          }}
+        >
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="fullName">Full Name</label>
           <input
             type="text"
@@ -150,12 +224,17 @@ export default function Register() {
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="dateOfBirth">Date of Birth</label>
           <input
             type="date"
@@ -163,12 +242,17 @@ export default function Register() {
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="phoneNumber">Phone Number</label>
           <input
             type="tel"
@@ -177,61 +261,97 @@ export default function Register() {
             value={formData.phoneNumber}
             onChange={handleChange}
             placeholder="10-digit Indian number (e.g., 9876543210)"
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
+          <label htmlFor="pinCode">Pin Code</label>
+          <input
+            type="number"
+            id="pinCode"
+            name="pinCode"
+            value={formData.pinCode}
+            onChange={handleChange}
+            placeholder="Pin Code (e.g., 123456)"
+            maxLength={6}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="state">State</label>
-          <select
+          <input
             id="state"
             name="state"
             value={formData.state}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
-          >
-            {states.map(s => (
-              <option key={s.code} value={s.code}>{s.name}</option>
-            ))}
-          </select>
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
+            disabled
+            required
+          />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="district">District</label>
-          <select
+          <input
             id="district"
             name="district"
             value={formData.district}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
-          >
-            <option value="">Select District</option>
-            {districts.map(d => (
-              <option key={d.code} value={d.code}>{d.name}</option>
-            ))}
-          </select>
+            disabled
+          />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="village">Village/Town</label>
           <select
             id="village"
             name="village"
             value={formData.village}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           >
             <option value="">Select Village/Town</option>
-            {villages.map(v => (
-              <option key={v} value={v}>{v}</option>
+            {villages.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
             ))}
           </select>
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="email">Email</label>
           <input
             type="email"
@@ -239,12 +359,17 @@ export default function Register() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="password">Password (min 6 chars)</label>
           <input
             type="password"
@@ -252,12 +377,17 @@ export default function Register() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="confirmPassword">Confirm Password</label>
           <input
             type="password"
@@ -265,19 +395,29 @@ export default function Register() {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
             required
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="role">I am a:</label>
           <select
             id="role"
             name="role"
             value={formData.role}
             onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+            style={{
+              width: "100%",
+              padding: "8px",
+              marginTop: "5px",
+              boxSizing: "border-box",
+            }}
           >
             <option value="student">Student</option>
             <option value="teacher">Teacher / Tutor</option>
@@ -290,26 +430,29 @@ export default function Register() {
           type="submit"
           disabled={loading}
           style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
+            width: "100%",
+            padding: "10px",
+            backgroundColor: loading ? "#ccc" : "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: loading ? "not-allowed" : "pointer",
+            fontSize: "16px",
           }}
         >
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? "Registering..." : "Register"}
         </button>
       </form>
 
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Already have an account?{' '}
-        <a href="/auth/login" style={{ color: '#007bff', textDecoration: 'none' }}>
+      <p style={{ marginTop: "20px", textAlign: "center" }}>
+        Already have an account?{" "}
+        <a
+          href="/auth/login"
+          style={{ color: "#007bff", textDecoration: "none" }}
+        >
           Log in
         </a>
       </p>
     </div>
-  )
+  );
 }
