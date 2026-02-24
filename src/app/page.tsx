@@ -1,53 +1,59 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import ListingCard from '@/components/ListingCard'
+import ListingCard from "@/components/ListingCard";
+import Link from "next/link";
 
 export default function Home() {
   const sampleListings = [
     {
       id: 1,
-      title: 'Sundar Tuition Centre',
-      location: 'Kolkata, West Bengal',
+      title: "Sundar Tuition Centre",
+      location: "Kolkata, West Bengal",
       rating: 4.6,
-      role: 'teacher',
-      image: 'https://placehold.co/600x400?text=Tuition+Centre',
+      role: "teacher",
+      image: "https://placehold.co/600x400?text=Tuition+Centre",
     },
     {
       id: 2,
-      title: 'Ajay Cabs',
-      location: 'Guwahati, Assam',
+      title: "Ajay Cabs",
+      location: "Guwahati, Assam",
       rating: 4.3,
-      role: 'driver',
-      image: 'https://placehold.co/600x400?text=Cab+Service',
+      role: "driver",
+      image: "https://placehold.co/600x400?text=Cab+Service",
     },
     {
       id: 3,
-      title: 'Nadia Coaching',
-      location: 'Agartala, Tripura',
+      title: "Nadia Coaching",
+      location: "Agartala, Tripura",
       rating: 4.8,
-      role: 'teacher',
-      image: 'https://placehold.co/600x400?text=Coaching+Centre',
+      role: "teacher",
+      image: "https://placehold.co/600x400?text=Coaching+Centre",
     },
     {
       id: 4,
-      title: 'Local Helper',
-      location: 'Bhubaneswar, Odisha',
+      title: "Local Helper",
+      location: "Bhubaneswar, Odisha",
       rating: 4.1,
-      role: 'locals',
-      image: 'https://placehold.co/600x400?text=Local+Service',
+      role: "locals",
+      image: "https://placehold.co/600x400?text=Local+Service",
     },
-  ]
+  ];
 
   return (
     <div className="site-container">
-      <header className="hero">
+      <header className="hero glass-2">
         <div className="hero-inner">
           <h1>Connect with local tutors, cabs and services</h1>
-          <p className="lead">Serving West Bengal, Assam, Tripura and Odisha — find rated, trusted local providers.</p>
+          <p className="lead">
+            Serving West Bengal, Assam, Tripura and Odisha — find rated, trusted
+            local providers.
+          </p>
 
           <div className="search-row">
-            <input className="search-input" placeholder="What are you looking for? e.g., tuitions, cab" />
+            <input
+              className="search-input"
+              placeholder="What are you looking for? e.g., tuitions, cab"
+            />
             <select className="region-select">
               <option>West Bengal</option>
               <option>Assam</option>
@@ -60,7 +66,9 @@ export default function Home() {
           <div className="auth-links">
             <Link href="/auth/register">Register</Link>
             <Link href="/auth/login">Login</Link>
-            <Link href="/search" style={{ marginLeft: '20px' }}>Browse Listings</Link>
+            <Link href="/search" style={{ marginLeft: "20px" }}>
+              Browse Listings
+            </Link>
           </div>
         </div>
       </header>
@@ -79,12 +87,12 @@ export default function Home() {
         <section className="listings">
           <h2>Featured providers</h2>
           <div className="cards-grid">
-            {sampleListings.map(item => (
+            {sampleListings.map((item) => (
               <ListingCard key={item.id} {...item} />
             ))}
           </div>
         </section>
       </main>
     </div>
-  )
+  );
 }
