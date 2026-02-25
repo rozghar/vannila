@@ -77,10 +77,10 @@ export default function Home() {
         <section className="categories">
           <h2>Browse by category</h2>
           <div className="cats">
-            <div className="cat">Tutors & Coaching</div>
-            <div className="cat">Local Cabs</div>
-            <div className="cat">Local Services</div>
-            <div className="cat">Verified Drivers</div>
+            <div className="cat glass-3">Tutors & Coaching</div>
+            <div className="cat glass-3">Local Cabs</div>
+            <div className="cat glass-3">Local Services</div>
+            <div className="cat glass-3">Verified Drivers</div>
           </div>
         </section>
 
